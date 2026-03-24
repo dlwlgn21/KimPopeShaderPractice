@@ -22,6 +22,9 @@
 #define ASPECT_RATIO	(WIN_WIDTH / (float)WIN_HEIGHT)
 #define NEAR_PLANE		1
 #define FAR_PLANE		10000
+
+D3DXVECTOR4 gWorldLightPos(500.0f, 500.0f, -500.0f, 1.0f);
+D3DXVECTOR4 gWorldCamPos(0.0f, 0.0f, -200.0f, 1.0f);
 //----------------------------------------------------------------------
 // 전역변수
 //----------------------------------------------------------------------
@@ -37,10 +40,8 @@ ID3DXFont*              gpFont			= NULL;
 LPD3DXMESH			    gpSphere = NULL;
 
 // 쉐이더
-LPD3DXEFFECT			gpTexMappingShader = NULL;
+LPD3DXEFFECT			gpLightingShader = NULL;
 // 텍스처
-
-LPDIRECT3DTEXTURE9		gpEarthTexture = NULL;
 
 // 프로그램 이름
 const char*				gAppName		= "초간단 쉐이더 데모 프레임워크";
@@ -171,7 +172,7 @@ void RenderFrame()
 void RenderScene()
 {
 	D3DXMATRIXA16 matView;
-	D3DXVECTOR3 vEyePt{0.0f, 0.0f, -200.0f};
+	D3DXVECTOR3 vEyePt{gWorldCamPos.x, gWorldCamPos.y, gWorldCamPos.z};
 	D3DXVECTOR3 vLookAtPt{0.0f, 0.0f, 0.0f};
 	D3DXVECTOR3 vUpVec{0.0f, 1.0f, 0.0f};
 	D3DXMatrixLookAtLH(&matView, &vEyePt, &vLookAtPt, &vUpVec);
@@ -188,25 +189,27 @@ void RenderScene()
 	D3DXMATRIXA16 matWorld;
 	D3DXMatrixRotationY(&matWorld, gRotationY);
 
-	gpTexMappingShader->SetMatrix("gMatWorld", &matWorld);
-	gpTexMappingShader->SetMatrix("gMatView", &matView);
-	gpTexMappingShader->SetMatrix("gMatProjection", &matProjection);
-	gpTexMappingShader->SetTexture("DiffuseMap_Tex", gpEarthTexture);
+	gpLightingShader->SetMatrix("gMatWorld", &matWorld);
+	gpLightingShader->SetMatrix("gMatView", &matView);
+	gpLightingShader->SetMatrix("gMatProjection", &matProjection);
+
+	gpLightingShader->SetVector("gWorldCamPos", &gWorldCamPos);
+	gpLightingShader->SetVector("gWorldLightPos", &gWorldLightPos);
 	UINT numPasses = 0;
 
-	gpTexMappingShader->Begin(&numPasses, NULL);
+	gpLightingShader->Begin(&numPasses, NULL);
 	{
 		for (UINT i = 0; i < numPasses; ++i)
 		{
-			gpTexMappingShader->BeginPass(i);
+			gpLightingShader->BeginPass(i);
 			{
 				gpSphere->DrawSubset(0);
 			}
-			gpTexMappingShader->EndPass();
+			gpLightingShader->EndPass();
 		}
 	}
 
-	gpTexMappingShader->End();
+	gpLightingShader->End();
 
 }
 
@@ -298,16 +301,16 @@ bool InitD3D(HWND hWnd)
 bool LoadAssets()
 {
 	// 텍스처 로딩
-	gpEarthTexture = LoadTexture("Earth.jpg");
-	if (!gpEarthTexture)
-	{
-		return false;
-	}
+	//gpEarthTexture = LoadTexture("Earth.jpg");
+	//if (!gpEarthTexture)
+	//{
+	//	return false;
+	//}
 
 
 	// 쉐이더 로딩
-	gpTexMappingShader = LoadShader("TextureMapping.fx");
-	if (!gpTexMappingShader)
+	gpLightingShader = LoadShader("Lighting.fx");
+	if (!gpLightingShader)
 	{
 		return false;
 	}
@@ -402,18 +405,18 @@ void Cleanup()
 		gpSphere = NULL;
 	}
 	// 쉐이더를 release 한다.
-	if (gpTexMappingShader)
+	if (gpLightingShader)
 	{
-		gpTexMappingShader->Release();
-		gpTexMappingShader = NULL;
+		gpLightingShader->Release();
+		gpLightingShader = NULL;
 	}
 	// 텍스처를 release 한다.
 
-	if (gpEarthTexture)
-	{
-		gpEarthTexture->Release();
-		gpEarthTexture = NULL;
-	}
+	//if (gpEarthTexture)
+	//{
+	//	gpEarthTexture->Release();
+	//	gpEarthTexture = NULL;
+	//}
 
 	// D3D를 release 한다.
     if(gpD3DDevice)
