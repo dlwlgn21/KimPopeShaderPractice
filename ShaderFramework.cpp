@@ -37,13 +37,15 @@ ID3DXFont*              gpFont			= NULL;
 LPD3DXMESH			    gpSphere = NULL;
 
 // 쉐이더
-LPD3DXEFFECT			gpColorShader = NULL;
+LPD3DXEFFECT			gpTexMappingShader = NULL;
 // 텍스처
+
+LPDIRECT3DTEXTURE9		gpEarthTexture = NULL;
 
 // 프로그램 이름
 const char*				gAppName		= "초간단 쉐이더 데모 프레임워크";
 
-
+float gRotationY;
 //-----------------------------------------------------------------------
 // 프로그램 진입점/메시지 루프
 //-----------------------------------------------------------------------
@@ -177,29 +179,34 @@ void RenderScene()
 	D3DXMATRIXA16 matProjection;
 	D3DXMatrixPerspectiveFovLH(&matProjection, FOV, ASPECT_RATIO, NEAR_PLANE, FAR_PLANE);
 
+
+	gRotationY += 0.4f * PI / 180.0f;
+	if (gRotationY > 2 * PI)
+	{
+		gRotationY -= 2 * PI;
+	}
 	D3DXMATRIXA16 matWorld;
-	D3DXMatrixIdentity(&matWorld);
+	D3DXMatrixRotationY(&matWorld, gRotationY);
 
-
-	gpColorShader->SetMatrix("gWorldMat", &matWorld);
-	gpColorShader->SetMatrix("gViewMat", &matView);
-	gpColorShader->SetMatrix("gProjectionMat", &matProjection);
-
+	gpTexMappingShader->SetMatrix("gMatWorld", &matWorld);
+	gpTexMappingShader->SetMatrix("gMatView", &matView);
+	gpTexMappingShader->SetMatrix("gMatProjection", &matProjection);
+	gpTexMappingShader->SetTexture("DiffuseMap_Tex", gpEarthTexture);
 	UINT numPasses = 0;
 
-	gpColorShader->Begin(&numPasses, NULL);
+	gpTexMappingShader->Begin(&numPasses, NULL);
 	{
 		for (UINT i = 0; i < numPasses; ++i)
 		{
-			gpColorShader->BeginPass(i);
+			gpTexMappingShader->BeginPass(i);
 			{
 				gpSphere->DrawSubset(0);
 			}
-			gpColorShader->EndPass();
+			gpTexMappingShader->EndPass();
 		}
 	}
 
-	gpColorShader->End();
+	gpTexMappingShader->End();
 
 }
 
@@ -291,10 +298,16 @@ bool InitD3D(HWND hWnd)
 bool LoadAssets()
 {
 	// 텍스처 로딩
+	gpEarthTexture = LoadTexture("Earth.jpg");
+	if (!gpEarthTexture)
+	{
+		return false;
+	}
+
 
 	// 쉐이더 로딩
-	gpColorShader = LoadShader("ColorShader.fx");
-	if (!gpColorShader)
+	gpTexMappingShader = LoadShader("TextureMapping.fx");
+	if (!gpTexMappingShader)
 	{
 		return false;
 	}
@@ -389,12 +402,18 @@ void Cleanup()
 		gpSphere = NULL;
 	}
 	// 쉐이더를 release 한다.
-	if (gpColorShader)
+	if (gpTexMappingShader)
 	{
-		gpColorShader->Release();
-		gpColorShader = NULL;
+		gpTexMappingShader->Release();
+		gpTexMappingShader = NULL;
 	}
 	// 텍스처를 release 한다.
+
+	if (gpEarthTexture)
+	{
+		gpEarthTexture->Release();
+		gpEarthTexture = NULL;
+	}
 
 	// D3D를 release 한다.
     if(gpD3DDevice)

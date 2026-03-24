@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\Graphics\PopeShader\01_DxFramework_Work\Debug\BasicFramework.exe</FullPath>
+      <FullPath>D:\Graphics\PopeShader\Shader\Debug\BasicFramework.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

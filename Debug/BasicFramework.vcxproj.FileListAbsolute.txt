@@ -1,1 +1,2 @@
 D:\Graphics\PopeShader\01_DxFramework_Work\Debug\BasicFramework.exe
+D:\Graphics\PopeShader\Shader\Debug\BasicFramework.exe
